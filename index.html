@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sandbox Game</title>
+
+<style>
+body {
+  margin:0;
+  font-family:sans-serif;
+  background:#111;
+  color:white;
+  overflow:hidden;
+}
+
+/* MENU */
+#menu {
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(#1e1e1e,#000);
+}
+
+button {
+  padding:15px 30px;
+  margin:10px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  background:#00ff88;
+}
+
+/* MOD MENU */
+#modMenu {
+  display:none;
+  padding:20px;
+}
+
+textarea {
+  width:100%;
+  height:200px;
+}
+
+/* GAME */
+canvas {
+  display:none;
+  background:#87CEEB;
+}
+
+/* CONTROLE MOBILE */
+#controls {
+  position:absolute;
+  bottom:20px;
+  left:20px;
+  display:none;
+}
+
+.ctrl {
+  width:60px;
+  height:60px;
+  background:rgba(255,255,255,0.2);
+  margin:5px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+<div id="menu">
+  <h1>🌍 Sandbox</h1>
+  <button onclick="startGame()">Jogar</button>
+  <button onclick="openMods()">Mods / Atualizar</button>
+</div>
+
+<!-- MODS -->
+<div id="modMenu">
+  <h2>Colar Código</h2>
+  <textarea id="code"></textarea><br>
+  <button onclick="applyCode()">Aplicar</button>
+  <button onclick="backMenu()">Voltar</button>
+</div>
+
+<!-- GAME -->
+<canvas id="game"></canvas>
+
+<!-- CONTROLES -->
+<div id="controls">
+  <div class="ctrl" ontouchstart="keys['a']=true" ontouchend="keys['a']=false">◀</div>
+  <div class="ctrl" ontouchstart="keys['d']=true" ontouchend="keys['d']=false">▶</div>
+  <div class="ctrl" ontouchstart="keys['w']=true" ontouchend="keys['w']=false">⬆</div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+// GAME STATE
+let running = false;
+
+// PLAYER
+let player = {
+  x:100,
+  y:200,
+  dx:0,
+  dy:0,
+  onGround:false,
+  color:"yellow"
+};
+
+// WORLD
+let blocks = [];
+for(let i=0;i<100;i++){
+  blocks.push({x:i*40,y:300});
+}
+
+// MENU
+function startGame(){
+  document.getElementById("menu").style.display="none";
+  canvas.style.display="block";
+  document.getElementById("controls").style.display="block";
+  running = true;
+}
+
+function openMods(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("modMenu").style.display="block";
+}
+
+function backMenu(){
+  document.getElementById("modMenu").style.display="none";
+  document.getElementById("menu").style.display="flex";
+}
+
+// MOD SYSTEM
+function applyCode(){
+  let code = document.getElementById("code").value;
+  try{
+    eval(code);
+    alert("Atualizado!");
+  }catch(e){
+    alert("Erro no código!");
+  }
+}
+
+// CONTROLES
+let keys = {};
+document.addEventListener("keydown", e=>keys[e.key]=true);
+document.addEventListener("keyup", e=>keys[e.key]=false);
+
+// FÍSICA
+function physics(){
+  if(keys["a"]) player.dx = -4;
+  if(keys["d"]) player.dx = 4;
+
+  if(keys["w"] && player.onGround){
+    player.dy = -12;
+    player.onGround=false;
+  }
+
+  player.dy += 0.6;
+
+  player.x += player.dx;
+  player.y += player.dy;
+
+  player.dx *= 0.8;
+
+  if(player.y>270){
+    player.y=270;
+    player.dy=0;
+    player.onGround=true;
+  }
+}
+
+// DESENHO
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // chão
+  blocks.forEach(b=>{
+    ctx.fillStyle="#8B4513";
+    ctx.fillRect(b.x,300,40,100);
+    ctx.fillStyle="green";
+    ctx.fillRect(b.x,295,40,5);
+  });
+
+  // player
+  ctx.fillStyle=player.color;
+  ctx.fillRect(player.x,player.y,25,35);
+}
+
+// LOOP
+function game(){
+  if(running){
+    physics();
+    draw();
+  }
+  requestAnimationFrame(game);
+}
+
+game();
+</script>
+
+</body>
+</html>
